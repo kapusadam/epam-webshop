@@ -2,5 +2,6 @@
 module.exports = {
     "_id": {"type": "Edm.String", key: true},
     "title": {"type": "Edm.String"},
-    "price": {"type": "Edm.Single"}
+    "price": {"type": "Edm.Single"},
+    "color": {"type": "Edm.Single"}
 };
