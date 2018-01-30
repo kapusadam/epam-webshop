@@ -31,7 +31,6 @@ app.use("/", function (req, res) {
     odataServer.handle(req, res);
 });
 
-
 var server = app.listen(PORT, function () {
     console.log('Server running at http://localhost:' + PORT + '');
 });
