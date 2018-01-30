@@ -1,0 +1,17 @@
+{
+  "name": "webshop",
+  "version": "1.0.0",
+  "description": "EPAM intern webshop",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Adam Kruppa, Laszlo Szegedi",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.7.1",
+    "express": "^4.14.0",
+    "mongodb": "^3.0.1",
+    "simple-odata-server": "^0.2.0"
+  }
+}
