@@ -5,6 +5,7 @@ var cors = require("cors");
 var item = require('./models/item');
 var continent = require('./models/continent');
 var country = require('./models/country');
+var countryContinent = require('./models/countryContinent');
 
 var app = express();
 const PORT = process.env.PORT || 5000;
@@ -15,12 +16,14 @@ var model = {
     entityTypes: {
         "ItemType": item,
         "ContinentType": continent,
-        "CountryType": country
+        "CountryType": country,
+        "CountryContinentType": countryContinent
     },
     entitySets: {
         "items": { entityType: "jsreport.ItemType" },
         "continents": { entityType: "jsreport.ContinentType" },
-        "countries": { entityType: "jsreport.CountryType" }
+        "countries": { entityType: "jsreport.CountryType" },
+        "countryContinents": { entityType: "jsreport.CountryContinentType" }
     }
 };
 
