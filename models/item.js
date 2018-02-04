@@ -4,5 +4,6 @@ module.exports = {
     "title": {"type": "Edm.String"},
     "price": {"type": "Edm.Decimal"},
     "discount": {"type": "Edm.Decimal"},
-    "countryCode": {"type": "Edm.String"}
+    "countryCode": {"type": "Edm.String"},
+    "rating": {"type": "Edm.Double"}
 };

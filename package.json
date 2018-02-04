@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Adam Kruppa, Laszlo Szegedi",
+  "author": "Adam Kruppa, Laszlo Szegedi, Zoltan Bekesi",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.7.1",
