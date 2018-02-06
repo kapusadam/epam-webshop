@@ -1,6 +1,7 @@
 var express = require('express');
 var ODataServer = require("simple-odata-server");
 var MongoClient = require('mongodb').MongoClient;
+var mongoAdapter = require('simple-odata-server-mongodb');
 var cors = require("cors");
 var item = require('./models/item');
 var continent = require('./models/continent');
@@ -32,7 +33,7 @@ var odataServer = ODataServer()
 
 MongoClient.connect("mongodb://admin:admin@ds115198.mlab.com:15198/webshop", function(err, client) {
     const myAwesomeDB = client.db('webshop');
-    odataServer.onMongo(function(cb) { cb(err, myAwesomeDB); });
+    odataServer.adapter(mongoAdapter(function(cb) {cb(err, myAwesomeDB); }));
 });
 
 
