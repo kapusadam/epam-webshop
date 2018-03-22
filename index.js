@@ -4,6 +4,7 @@ var MongoClient = require('mongodb').MongoClient;
 var mongoAdapter = require('simple-odata-server-mongodb');
 var cors = require("cors");
 var item = require('./models/item');
+var meti = require('./models/meti');
 var continent = require('./models/continent');
 var country = require('./models/country');
 var countryContinent = require('./models/countryContinent');
@@ -18,12 +19,14 @@ var model = {
     namespace: "jsreport",
     entityTypes: {
         "ItemType": item,
+        "MetiType": meti,
         "ContinentType": continent,
         "CountryType": country,
         "CountryContinentType": countryContinent
     },
     entitySets: {
         "items": {entityType: "jsreport.ItemType"},
+        "metis": {entityType: "jsreport.MetiType"},
         "continents": {entityType: "jsreport.ContinentType"},
         "countries": {entityType: "jsreport.CountryType"},
         "countryContinents": {entityType: "jsreport.CountryContinentType"}
