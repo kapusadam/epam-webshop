@@ -7,6 +7,8 @@ var item = require('./models/item');
 var continent = require('./models/continent');
 var country = require('./models/country');
 var countryContinent = require('./models/countryContinent');
+var request = require('request');
+var async = require('async');
 
 var app = express();
 const PORT = process.env.PORT || 5000;
@@ -21,21 +23,67 @@ var model = {
         "CountryContinentType": countryContinent
     },
     entitySets: {
-        "items": { entityType: "jsreport.ItemType" },
-        "continents": { entityType: "jsreport.ContinentType" },
-        "countries": { entityType: "jsreport.CountryType" },
-        "countryContinents": { entityType: "jsreport.CountryContinentType" }
+        "items": {entityType: "jsreport.ItemType"},
+        "continents": {entityType: "jsreport.ContinentType"},
+        "countries": {entityType: "jsreport.CountryType"},
+        "countryContinents": {entityType: "jsreport.CountryContinentType"}
     }
 };
 
 var odataServer = ODataServer()
     .model(model);
 
-MongoClient.connect("mongodb://admin:admin@ds115198.mlab.com:15198/webshop", function(err, client) {
+MongoClient.connect("mongodb://admin:admin@ds115198.mlab.com:15198/webshop", function (err, client) {
     const myAwesomeDB = client.db('webshop');
-    odataServer.adapter(mongoAdapter(function(cb) {cb(err, myAwesomeDB); }));
+    odataServer.adapter(mongoAdapter(function (cb) {
+        cb(err, myAwesomeDB);
+    }));
 });
 
+
+app.get("/example", function (req, res, next) {
+
+    var requests = [function (callback) {
+        var url = 'http://localhost:' + PORT + '/continents';
+        request(url, function (err, response, body) {
+            // JSON body
+            if (err) {
+                console.log(err);
+                callback(true);
+                return;
+            }
+            obj = JSON.parse(body);
+            callback(false, obj);
+        });
+    },
+        /*
+         * Second external endpoint
+         */
+        function (callback) {
+            var url = 'http://localhost:' + PORT + '/items';
+            request(url, function (err, response, body) {
+                // JSON body
+                if (err) {
+                    console.log(err);
+                    callback(true);
+                    return;
+                }
+                obj = JSON.parse(body);
+                callback(false, obj);
+            });
+        }];
+
+    async.parallel(requests, function (err, results) {
+        if (err) {
+            console.log(err);
+            res.send(500, "Server Error");
+            return;
+        }
+
+        res.send({api1: results[0], api2: results[1]});
+    });
+
+});
 
 app.use("/", function (req, res) {
     odataServer.handle(req, res);
