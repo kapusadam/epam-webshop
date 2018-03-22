@@ -14,6 +14,8 @@ var app = express();
 const PORT = process.env.PORT || 5000;
 app.use(cors());
 
+console.log('fut a server');
+
 var model = {
     namespace: "jsreport",
     entityTypes: {
