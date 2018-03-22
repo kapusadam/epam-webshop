@@ -40,11 +40,11 @@ MongoClient.connect("mongodb://admin:admin@ds115198.mlab.com:15198/webshop", fun
     }));
 });
 
-
-app.get("/example", function (req, res, next) {
+/continetFilter/items?$filter=countryCode eq 'AF'&continents=['AF','EU']
+app.get("/continetFilter", function (req, res, next) {
 
     var requests = [function (callback) {
-        var url = 'http://localhost:' + PORT + '/continents';
+        var url = 'http://localhost:' + PORT + '/countryContinents';
         request(url, function (err, response, body) {
             // JSON body
             if (err) {
@@ -59,6 +59,23 @@ app.get("/example", function (req, res, next) {
         /*
          * Second external endpoint
          */
+        function (callback) {
+            var url = 'http://localhost:' + PORT + '/countries';
+            request(url, function (err, response, body) {
+                // JSON body
+                if (err) {
+                    console.log(err);
+                    callback(true);
+                    return;
+                }
+                obj = JSON.parse(body);
+                callback(false, obj);
+            });
+        },
+        /*
+         * Third external endpoint
+         */
+
         function (callback) {
             var url = 'http://localhost:' + PORT + '/items';
             request(url, function (err, response, body) {
@@ -80,7 +97,26 @@ app.get("/example", function (req, res, next) {
             return;
         }
 
-        res.send({api1: results[0], api2: results[1]});
+        var countryContinentArray = [];
+
+        for(var i = 0; i < results[0].value.length; i++) {
+            for(var j = 0; j < results[1].value.length; j++) {
+                if(results[0].value[i].country === results[1].value[j].name) {
+                    countryContinentArray.push({countryCode: results[1].value[j].code, continentCode: results[0].value[i].continent});
+                }
+            }
+        }
+
+
+        for(var i = 0; i < countryContinentArray.length; i++) {
+            for(var j = 0; j < results[2].value.length; j++) {
+                if(countryContinentArray[i].countryCode === results[2].value[j].countryCode) {
+                    results[2].value[j].continentCode = countryContinentArray[i].continentCode;
+                }
+            }
+        }
+
+        res.send({api3: results[2]});
     });
 
 });
