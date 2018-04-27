@@ -15,9 +15,7 @@
     "mongodb": "^3.0.1",
     "request": "^2.85.0",
     "simple-odata-server": "1.0.0",
-    "simple-odata-server-mongodb": "^1.0.0"
-  },
-  "devDependencies": {
+    "simple-odata-server-mongodb": "^1.0.0",
     "nodemailer": "^4.6.4"
   }
 }

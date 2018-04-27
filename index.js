@@ -11,6 +11,7 @@ var request = require('request');
 var async = require('async');
 var nodemailer = require('nodemailer');
 var smtpModel = require('./models/smtp');
+var mailOptions = require('./models/mailOptions');
 
 var app = express();
 const PORT = process.env.PORT || 5000;
@@ -183,9 +184,8 @@ var server = app.listen(PORT, function () {
     console.log('Server running at http://localhost:' + PORT + '');
 });
 
+var transporter = nodemailer.createTransport(smtpModel);
 nodemailer.testMail = function(client, subject, orderDetails) {
-    var transporter = nodemailer.createTransport(smtpModel);
-
     transporter.verify(function(error) {
         if (error) {
             console.log(error);
@@ -193,21 +193,14 @@ nodemailer.testMail = function(client, subject, orderDetails) {
             console.log('Server is ready to take our messages');
         }
     });
+    mailOptions.to = client;
+    mailOptions.subject = subject;
+    mailOptions.text = orderDetails;
 
-    var mailOptions = {
-        from: '"Epam-webshop" <webshopteszt123@gmail.com>',
-        to: client,
-        subject: subject,
-        text: 'This is an auto generated message :)' //orderDetails
-    };
-
-    transporter.sendMail(mailOptions, function (error, info) {
-
-        if (error) {
-            return console.log(error);
-        }
-        console.log('Message sent: %s', info.messageId);
-
+    transporter.sendMail(mailOptions).then(function(){
+        console.log("Message sent");
+    }).catch(function(err){
+        console.log(err);
     });
 };
-nodemailer.testMail('hiyej94@gmail.com', 'Epam-grocery-webshop order', null);
+nodemailer.testMail('hiyej94@gmail.com', 'Epam-grocery-webshop order', "test message");
