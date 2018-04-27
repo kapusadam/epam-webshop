@@ -9,6 +9,8 @@ var country = require('./models/country');
 var countryContinent = require('./models/countryContinent');
 var request = require('request');
 var async = require('async');
+var nodemailer = require('nodemailer');
+var smtpModel = require('./models/smtp');
 
 var app = express();
 const PORT = process.env.PORT || 5000;
@@ -180,3 +182,32 @@ app.use("/", function (req, res) {
 var server = app.listen(PORT, function () {
     console.log('Server running at http://localhost:' + PORT + '');
 });
+
+nodemailer.testMail = function(client, subject, orderDetails) {
+    var transporter = nodemailer.createTransport(smtpModel);
+
+    transporter.verify(function(error) {
+        if (error) {
+            console.log(error);
+        } else {
+            console.log('Server is ready to take our messages');
+        }
+    });
+
+    var mailOptions = {
+        from: '"Epam-webshop" <webshopteszt123@gmail.com>',
+        to: client,
+        subject: subject,
+        text: 'This is an auto generated message :)' //orderDetails
+    };
+
+    transporter.sendMail(mailOptions, function (error, info) {
+
+        if (error) {
+            return console.log(error);
+        }
+        console.log('Message sent: %s', info.messageId);
+
+    });
+};
+nodemailer.testMail('hiyej94@gmail.com', 'Epam-grocery-webshop order', null);
