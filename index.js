@@ -9,11 +9,9 @@ var country = require('./models/country');
 var countryContinent = require('./models/countryContinent');
 var request = require('request');
 var async = require('async');
-var nodemailer = require('nodemailer');
-var smtpModel = require('./models/smtp');
-var mailOptions = require('./models/mailOptions');
-
+var nodemailer = require('./models/email.sender');
 var app = express();
+
 const PORT = process.env.PORT || 5000;
 app.use(cors());
 
@@ -184,23 +182,6 @@ var server = app.listen(PORT, function () {
     console.log('Server running at http://localhost:' + PORT + '');
 });
 
-var transporter = nodemailer.createTransport(smtpModel);
-nodemailer.testMail = function(client, subject, orderDetails) {
-    transporter.verify(function(error) {
-        if (error) {
-            console.log(error);
-        } else {
-            console.log('Server is ready to take our messages');
-        }
-    });
-    mailOptions.to = client;
-    mailOptions.subject = subject;
-    mailOptions.text = orderDetails;
+var nodeMailer = new nodemailer();
 
-    transporter.sendMail(mailOptions).then(function(){
-        console.log("Message sent");
-    }).catch(function(err){
-        console.log(err);
-    });
-};
-nodemailer.testMail('hiyej94@gmail.com', 'Epam-grocery-webshop order', "test message");
+nodeMailer.sendMail('hiyej94@gmail.com', 'Epam-grocery-webshop order', 'test message');
