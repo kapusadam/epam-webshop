@@ -1,4 +1,6 @@
-module.exports = {
+var nodemailer = require('nodemailer');
+
+module.exports = config ={
     smtp: {
         host: 'smtp.gmail.com',
         port: 587,

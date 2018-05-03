@@ -183,5 +183,4 @@ var server = app.listen(PORT, function () {
 });
 
 var nodeMailer = new nodemailer();
-
 nodeMailer.sendMail('hiyej94@gmail.com', 'Epam-grocery-webshop order', 'test message');
