@@ -17,12 +17,5 @@ nodeMailer.prototype.sendMail = function(client, subject, orderDetails) {
     config.mailOptions.subject = subject;
     config.mailOptions.text = orderDetails;
 
-    return new Promise(function(resolve, reject) {
-        if (transporter.sendMail(config.mailOptions)) {
-            resolve("mail sent")
-        }
-        else {
-            reject ("something went wrong")
-        }
-    });
+    return transporter.sendMail(config.mailOptions);
 };
