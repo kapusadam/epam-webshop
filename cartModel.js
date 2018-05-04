@@ -31,13 +31,13 @@ CartModel.prototype.addQuantity = function(itemId, cartOfUser, quantity) {
     }
 }
 
-CartModel.prototype.add = function(cartId, itemId, quantity) {
+CartModel.prototype.add = function(cartId, itemId, quantity, imageUrl) {
     var cartOfUser = this.cartById(cartId);
 
     if(this.hasAlready(itemId, cartOfUser)){
         this.addQuantity(itemId, cartOfUser, quantity);
     } else {
-        cartOfUser.push({itemId : itemId, quantity : quantity});
+        cartOfUser.push({itemId : itemId, quantity : quantity, imageUrl: imageUrl});
     }
 };
 

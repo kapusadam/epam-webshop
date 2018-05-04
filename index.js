@@ -188,16 +188,15 @@ app.post('/addItem', function (req, res) {
     var cartId = req.body.cartId;
     var itemId = req.body.item._id;
     var quantity = req.body.quantity;
-    // var imageUrl = req.body.imageUrl;
-    // var isItemAlreadyInCartArray = false;
+    var imageUrl = req.body.imageUrl;
 
 
     if(cartId === 'undefined') {
         var uniqueId = _.uniqueId('cartId-');
-        cartModel.sessions.push({cartId : uniqueId, cart : []});
+        cartModel.sessions.push({cartId : uniqueId, cart : [], imageUrl: imageUrl});
         res.send({cart: []});
     } else {
-        cartModel.add(cartId, itemId, quantity);
+        cartModel.add(cartId, itemId, quantity, imageUrl);
         res.send({cart: cartModel.get(cartId)});
     }
 });
@@ -310,7 +309,6 @@ app.get('/getCart', function(req, res) {
         cartModel.sessions.push({cartId: uniqueId, cart: []});
         res.send({cart: [], cartId: uniqueId});
     } else {
-
         if(cartModel.get(cartId) === null) {
             cartModel.sessions.push({cartId: cartId, cart: []});
             res.send({cart: []});
