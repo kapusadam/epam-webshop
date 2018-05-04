@@ -196,7 +196,7 @@ app.post('/addItem', function (req, res) {
         cartModel.sessions.push({cartId : uniqueId, cart : [], imageUrl: imageUrl});
         res.send({cart: []});
     } else {
-        cartModel.add(cartId, itemId, quantity, imageUrl);
+        cartModel.add(cartId, itemId, quantity, imageUrl, _);
         res.send({cart: cartModel.get(cartId)});
     }
 });
@@ -219,7 +219,7 @@ app.post('/addItem', function (req, res) {
 
 
 
-app.put('/putItem', function(req, res) {
+app.put('/putItemQuantity', function(req, res) {
     var cartId = req.body.cartId;
     var itemId = req.body.itemId;
     var quantity = req.body.quantity;

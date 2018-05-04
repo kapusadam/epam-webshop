@@ -4,8 +4,6 @@ module.exports = CartModel = function () {
 CartModel.prototype.sessions = [];
 
 CartModel.prototype.cartById = function(cartId) {
-    console.log(cartId)
-    console.log(this.sessions)
     for(var i = 0; i < this.sessions.length; i++) {
         if(this.sessions[i].cartId === cartId)
             return this.sessions[i].cart;
@@ -34,10 +32,14 @@ CartModel.prototype.addQuantity = function(itemId, cartOfUser, quantity) {
 CartModel.prototype.add = function(cartId, itemId, quantity, imageUrl) {
     var cartOfUser = this.cartById(cartId);
 
-    if(this.hasAlready(itemId, cartOfUser)){
-        this.addQuantity(itemId, cartOfUser, quantity);
+    if(cartOfUser !== null) {
+        if (this.hasAlready(itemId, cartOfUser)) {
+            this.addQuantity(itemId, cartOfUser, quantity);
+        } else {
+            cartOfUser.push({itemId: itemId, quantity: quantity, imageUrl: imageUrl});
+        }
     } else {
-        cartOfUser.push({itemId : itemId, quantity : quantity, imageUrl: imageUrl});
+        this.sessions.push({cartId: cartId, cart: [{itemId: itemId, quantity: quantity, imageUrl: imageUrl}]});
     }
 };
 
