@@ -105,7 +105,7 @@ app.get("/helper", function(req, res) {
 
 });
 
-app.get("/continentFilter", function (req, res, next) {
+app.get("/continentFilter", function (req, res) {
 
     var requests = [function (callback) {
         var url = 'http://localhost:' + PORT + '/helper';
@@ -162,7 +162,6 @@ app.get("/continentFilter", function (req, res, next) {
             }
         }
 
-
         if(continentCodeArray.length) {
             for (var i = 0; i < continentCodeArray.length; i++) {
                 for (var j = 0; j < results[1].value.length; j++) {
@@ -184,7 +183,7 @@ app.get("/continentFilter", function (req, res, next) {
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-app.post('/addItem', function (req, res) {
+app.post('/cart', function (req, res) {
     var cartId = req.body.cartId;
     var itemId = req.body.item._id;
     var quantity = req.body.quantity;
@@ -201,25 +200,8 @@ app.post('/addItem', function (req, res) {
     }
 });
 
-// ^^
-// for (var i = 0; i < cartArray.length; i++) {
-//     if (cartArray[i].item._id === item._id) {
-//         cartArray[i].quantity += quantity;
-//         isItemAlreadyInCartArray = true;
-//         break;
-//     }
-// }
-//
-// if(!isItemAlreadyInCartArray)
-//     cartArray.push({item: item, quantity: quantity, imageUrl: imageUrl});
-//
-// subTotal += req.body.item.price * quantity;
 
-
-
-
-
-app.put('/putItemQuantity', function(req, res) {
+app.put('/cart', function(req, res) {
     var cartId = req.body.cartId;
     var itemId = req.body.itemId;
     var quantity = req.body.quantity;
@@ -232,38 +214,92 @@ app.put('/putItemQuantity', function(req, res) {
     }
 });
 
-app.delete('/deleteItem', function(req, res) {
-    var cartId = req.body.cartId;
-
-    var itemId = req.body.itemId;
+app.delete('/cart', function(req, res) {
+    var cartId = req.query.cartId;
+    var itemId = req.query.itemId;
 
     if(cartModel.delete(cartId, itemId)) {
-        res.send('Item deleted succesfully.')
+
+        var userCart = cartModel.cartById(cartId);
+        // var response = getCartWithSubTotal(userCart);
+
+
+        var subTotal = 0;
+        // var query = [];
+
+        var url = "http://localhost:5000/items?$filter=";
+
+        for (var i = 0; i < userCart.length; i++) {
+            url += "_id eq '" + userCart[i].itemId + "'&";
+        }
+
+        var requests = [function (callback) {
+            request(url, function (err, response, body) {
+                // JSON body
+                if (err) {
+                    console.log(err);
+                    callback(true);
+                    return;
+                }
+
+                obj = JSON.parse(body);
+                callback(false, obj);
+            });
+        }];
+
+
+        async.parallel(requests, function (err, results) {
+            if (err) {
+                console.log(err);
+                res.send(500, "Server Error");
+                return;
+            }
+
+            var query = results[0].value;
+
+            for (var i = 0; i < userCart.length; i++) {
+                for (var j = 0; j < query.length; j++) {
+                    if (userCart[i].itemId === query[j]._id) {
+                        subTotal += userCart[i].quantity * query[j].price;
+                        break;
+                    }
+                }
+            }
+        });
+
+        console.log(subTotal);
+
+        res.send({cart: {}, subTotal: subTotal});
     } else {
-        res.send('Item not found.')
+        res.status(404).send({error: 'Item not found'});
     };
 });
 
-app.get('/subTotal', function(req, res) {
-    var cartId = req.body.cartId;
+app.get('/cart', function(req, res) {
+    var cartId = req.query.cartId;
 
-    if(cartId === undefined) {
-        res.send({subTotal: 0});
+    if(cartId === 'undefined'){
+        var uniqueId = _.uniqueId('cartId-');
+        cartModel.sessions.push({cart: [], cartId: uniqueId });
+        res.send({cart: [], cartId: uniqueId, subTotal: 0});
     } else {
+
         var userCart = cartModel.cartById(cartId);
 
-        if(userCart !== null) {
+        if (userCart !== null) {
             var subTotal = 0;
-            var url = "http://localhost:5000/items?$filter=";
+            var url = "http://localhost:5000/items?$filter=_id eq '" + userCart[0].itemId + "'";
 
-            for(var i = 0; i < userCart.length; i++) {
-                url += "_id eq '" + userCart.itemId + "'&";
+            for (var i = 1; i < userCart.length; i++) {
+                url += " or _id eq '" + userCart[i].itemId + "'";
             }
+
+            console.log(url);
 
             var requests = [function (callback) {
                 request(url, function (err, response, body) {
                     // JSON body
-                    if(err) {
+                    if (err) {
                         console.log(err);
                         callback(true);
                         return;
@@ -283,37 +319,29 @@ app.get('/subTotal', function(req, res) {
 
                 var query = results[0].value;
 
-                for(var i = 0; i < userCart.length; i++) {
-                    for(var j = 0; j < query.length; j++) {
-                        if(userCart[i].itemId === query[j]._id) {
+
+
+                var resultArray = [];
+
+                console.log(userCart)
+                console.log(query);
+
+                for (var i = 0; i < userCart.length; i++) {
+                    for (var j = 0; j < query.length; j++) {
+                        if (userCart[i].itemId === query[j]._id) {
+                            resultArray.push({item: query[i], quantity: userCart[i].quantity, imageUrl: userCart[i].imageUrl});
                             subTotal += userCart[i].quantity * query[j].price;
                             break;
                         }
                     }
                 }
 
-                res.send({subTotal : subTotal});
+                res.send({cart: resultArray, subTotal: subTotal});
             });
-
         } else {
-            res.send({subTotal: 0});
-        }
-    }
-});
-
-app.get('/getCart', function(req, res) {
-    var cartId = req.query.cartId;
-
-    if(cartId === 'undefined'){
-        var uniqueId = _.uniqueId('cartId-');
-        cartModel.sessions.push({cartId: uniqueId, cart: []});
-        res.send({cart: [], cartId: uniqueId});
-    } else {
-        if(cartModel.get(cartId) === null) {
             cartModel.sessions.push({cartId: cartId, cart: []});
-            res.send({cart: []});
-        } else
-            res.send({cart: cartModel.get(cartId)});
+            res.send({cart: [], subTotal: 0});
+        }
     }
 });
 

@@ -68,7 +68,7 @@ CartModel.prototype.delete = function(cartId, itemId) {
 
     if(cartToDeleteFrom !== null) {
         for (var i = 0; i < cartToDeleteFrom.length; i++) {
-            if (cartToDeleteFrom[i] === itemId) {
+            if (cartToDeleteFrom[i].itemId === itemId) {
                 cartToDeleteFrom.splice(i, 1);
                 return true;
             }

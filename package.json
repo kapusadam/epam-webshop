@@ -15,10 +15,9 @@
     "mongodb": "^3.0.1",
     "request": "^2.85.0",
     "simple-odata-server": "1.0.0",
-    "simple-odata-server-mongodb": "^1.0.0"
-  },
-  "devDependencies": {
+    "simple-odata-server-mongodb": "^1.0.0",
     "body-parser": "^1.18.2",
     "lodash": "^4.17.10"
+
   }
 }
