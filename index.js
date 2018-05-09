@@ -208,7 +208,7 @@ app.put('/cart', function(req, res) {
 
     if(quantity >= 0) {
        cartModel.put(cartId, itemId, quantity);
-       res.send('PUT accomplished');
+       sendCartWithSubTotal(cartId, res);
     } else {
        res.send('Quantity is a negative.');
     }
@@ -220,17 +220,25 @@ app.delete('/cart', function(req, res) {
 
     if(cartModel.delete(cartId, itemId)) {
 
-        var userCart = cartModel.cartById(cartId);
-        // var response = getCartWithSubTotal(userCart);
+    sendCartWithSubTotal(cartId, res);
 
+    } else {
+        res.status(404).send({error: 'Item not found'});
+    };
+});
 
-        var subTotal = 0;
-        // var query = [];
+function sendCartWithSubTotal(cartId, res) {
 
-        var url = "http://localhost:5000/items?$filter=";
+    var userCart = cartModel.cartById(cartId);
 
-        for (var i = 0; i < userCart.length; i++) {
-            url += "_id eq '" + userCart[i].itemId + "'&";
+    var subTotal = 0;
+
+    if(userCart.length !== 0) {
+
+        var url = "http://localhost:5000/items?$filter=_id eq '" + userCart[0].itemId + "'";
+
+        for (var i = 1; i < userCart.length; i++) {
+            url += " or _id eq '" + userCart[i].itemId + "'";
         }
 
         var requests = [function (callback) {
@@ -247,6 +255,7 @@ app.delete('/cart', function(req, res) {
             });
         }];
 
+        var resultArray = [];
 
         async.parallel(requests, function (err, results) {
             if (err) {
@@ -257,23 +266,27 @@ app.delete('/cart', function(req, res) {
 
             var query = results[0].value;
 
+
             for (var i = 0; i < userCart.length; i++) {
                 for (var j = 0; j < query.length; j++) {
                     if (userCart[i].itemId === query[j]._id) {
+                        resultArray.push({
+                            item: query[i],
+                            quantity: userCart[i].quantity,
+                            imageUrl: userCart[i].imageUrl
+                        });
                         subTotal += userCart[i].quantity * query[j].price;
                         break;
                     }
                 }
             }
+
+            res.send({cart: resultArray, subTotal: subTotal});
         });
-
-        console.log(subTotal);
-
-        res.send({cart: {}, subTotal: subTotal});
     } else {
-        res.status(404).send({error: 'Item not found'});
-    };
-});
+        res.send({cart: [], subTotal: 0});
+    }
+}
 
 app.get('/cart', function(req, res) {
     var cartId = req.query.cartId;
@@ -285,59 +298,60 @@ app.get('/cart', function(req, res) {
     } else {
 
         var userCart = cartModel.cartById(cartId);
+        //
+        // if (userCart !== null) {
+        //     var subTotal = 0;
+        //     var url = "http://localhost:5000/items?$filter=_id eq '" + userCart[0].itemId + "'";
+        //
+        //     for (var i = 1; i < userCart.length; i++) {
+        //         url += " or _id eq '" + userCart[i].itemId + "'";
+        //     }
+        //
+        //     var requests = [function (callback) {
+        //         request(url, function (err, response, body) {
+        //             // JSON body
+        //             if (err) {
+        //                 console.log(err);
+        //                 callback(true);
+        //                 return;
+        //             }
+        //
+        //             obj = JSON.parse(body);
+        //             callback(false, obj);
+        //         });
+        //     }];
+        //
+        //     async.parallel(requests, function (err, results) {
+        //         if (err) {
+        //             console.log(err);
+        //             res.send(500, "Server Error");
+        //             return;
+        //         }
+        //
+        //         var query = results[0].value;
+        //
+        //
+        //
+        //         var resultArray = [];
+        //
+        //         console.log(userCart)
+        //         console.log(query);
+        //
+        //         for (var i = 0; i < userCart.length; i++) {
+        //             for (var j = 0; j < query.length; j++) {
+        //                 if (userCart[i].itemId === query[j]._id) {
+        //                     resultArray.push({item: query[i], quantity: userCart[i].quantity, imageUrl: userCart[i].imageUrl});
+        //                     subTotal += userCart[i].quantity * query[j].price;
+        //                     break;
+        //                 }
+        //             }
+        //         }
 
-        if (userCart !== null) {
-            var subTotal = 0;
-            var url = "http://localhost:5000/items?$filter=_id eq '" + userCart[0].itemId + "'";
 
-            for (var i = 1; i < userCart.length; i++) {
-                url += " or _id eq '" + userCart[i].itemId + "'";
-            }
+        if(userCart !== null){
 
-            console.log(url);
+            sendCartWithSubTotal(cartId, res);
 
-            var requests = [function (callback) {
-                request(url, function (err, response, body) {
-                    // JSON body
-                    if (err) {
-                        console.log(err);
-                        callback(true);
-                        return;
-                    }
-
-                    obj = JSON.parse(body);
-                    callback(false, obj);
-                });
-            }];
-
-            async.parallel(requests, function (err, results) {
-                if (err) {
-                    console.log(err);
-                    res.send(500, "Server Error");
-                    return;
-                }
-
-                var query = results[0].value;
-
-
-
-                var resultArray = [];
-
-                console.log(userCart)
-                console.log(query);
-
-                for (var i = 0; i < userCart.length; i++) {
-                    for (var j = 0; j < query.length; j++) {
-                        if (userCart[i].itemId === query[j]._id) {
-                            resultArray.push({item: query[i], quantity: userCart[i].quantity, imageUrl: userCart[i].imageUrl});
-                            subTotal += userCart[i].quantity * query[j].price;
-                            break;
-                        }
-                    }
-                }
-
-                res.send({cart: resultArray, subTotal: subTotal});
-            });
         } else {
             cartModel.sessions.push({cartId: cartId, cart: []});
             res.send({cart: [], subTotal: 0});
