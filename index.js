@@ -298,60 +298,9 @@ app.get('/cart', function(req, res) {
     } else {
 
         var userCart = cartModel.cartById(cartId);
-        //
-        // if (userCart !== null) {
-        //     var subTotal = 0;
-        //     var url = "http://localhost:5000/items?$filter=_id eq '" + userCart[0].itemId + "'";
-        //
-        //     for (var i = 1; i < userCart.length; i++) {
-        //         url += " or _id eq '" + userCart[i].itemId + "'";
-        //     }
-        //
-        //     var requests = [function (callback) {
-        //         request(url, function (err, response, body) {
-        //             // JSON body
-        //             if (err) {
-        //                 console.log(err);
-        //                 callback(true);
-        //                 return;
-        //             }
-        //
-        //             obj = JSON.parse(body);
-        //             callback(false, obj);
-        //         });
-        //     }];
-        //
-        //     async.parallel(requests, function (err, results) {
-        //         if (err) {
-        //             console.log(err);
-        //             res.send(500, "Server Error");
-        //             return;
-        //         }
-        //
-        //         var query = results[0].value;
-        //
-        //
-        //
-        //         var resultArray = [];
-        //
-        //         console.log(userCart)
-        //         console.log(query);
-        //
-        //         for (var i = 0; i < userCart.length; i++) {
-        //             for (var j = 0; j < query.length; j++) {
-        //                 if (userCart[i].itemId === query[j]._id) {
-        //                     resultArray.push({item: query[i], quantity: userCart[i].quantity, imageUrl: userCart[i].imageUrl});
-        //                     subTotal += userCart[i].quantity * query[j].price;
-        //                     break;
-        //                 }
-        //             }
-        //         }
-
 
         if(userCart !== null){
-
             sendCartWithSubTotal(cartId, res);
-
         } else {
             cartModel.sessions.push({cartId: cartId, cart: []});
             res.send({cart: [], subTotal: 0});
