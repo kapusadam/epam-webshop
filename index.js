@@ -13,6 +13,9 @@ var async = require('async');
 var app = express();
 var bodyParser = require("body-parser");
 const PORT = process.env.PORT || 5000;
+const BASEAPIURL = 'http://localhost:' + PORT;
+
+console.log(BASEAPIURL);
 app.use(cors());
 
 var _ = require('lodash');
@@ -53,7 +56,7 @@ MongoClient.connect("mongodb://admin:admin@ds115198.mlab.com:15198/webshop", fun
 app.get("/helper", function(req, res) {
 
     var requests = [function (callback) {
-        var url = 'http://localhost:' + PORT + '/countryContinents';
+        var url = BASEAPIURL + '/countryContinents';
         request(url, function (err, response, body) {
             // JSON body
             if (err) {
@@ -69,7 +72,7 @@ app.get("/helper", function(req, res) {
          * Second external endpoint
          */
         function (callback) {
-            var url = 'http://localhost:' + PORT + '/countries';
+            var url = BASEAPIURL + '/countries';
             request(url, function (err, response, body) {
                 // JSON body
                 if (err) {
@@ -108,7 +111,7 @@ app.get("/helper", function(req, res) {
 app.get("/continentFilter", function (req, res) {
 
     var requests = [function (callback) {
-        var url = 'http://localhost:' + PORT + '/helper';
+        var url = BASEAPIURL + '/helper';
         request(url, function (err, response, body) {
             // JSON body
             if (err) {
@@ -124,7 +127,7 @@ app.get("/continentFilter", function (req, res) {
          * Second external endpoint
          */
         function (callback) {
-            var url = 'http://localhost:' + PORT + '/items?$filter=' + req.query.$filter;
+            var url = BASEAPIURL + '/items?$filter=' + req.query.$filter;
 
             request(url, function (err, response, body) {
                 // JSON body
@@ -226,7 +229,7 @@ app.delete('/cart', function(req, res) {
 });
 
 function makeUrlFromUserCart(userCart) {
-    var url = "http://localhost:" + PORT + "/items?$filter=_id eq '" + userCart[0].itemId + "'";
+    var url = BASEAPIURL + "/items?$filter=_id eq '" + userCart[0].itemId + "'";
 
     for (var i = 1; i < userCart.length; i++) {
         url += " or _id eq '" + userCart[i].itemId + "'";
@@ -313,5 +316,5 @@ app.use("/", function (req, res) {
 });
 
 var server = app.listen(PORT, function () {
-    console.log('Server running at http://localhost:' + PORT + '');
+    console.log('Server running at ' + BASEAPIURL + '');
 });

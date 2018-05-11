@@ -10,12 +10,6 @@ CartModel.prototype.cartById = function(cartId) {
     });
 
     return sessionToReturn ? sessionToReturn.cart : null;
-
-    // if(sessionToReturn === undefined)
-    //     return undefined;
-    // else
-    //     return sessionToReturn.cart;
-
 };
 
 CartModel.prototype.hasAlready = function(itemId, cartOfUser) {
@@ -50,16 +44,6 @@ CartModel.prototype.add = function(cartId, itemId, quantity, imageUrl) {
     } else {
         this.sessions.push({cartId: cartId, cart: [{itemId: itemId, quantity: quantity, imageUrl: imageUrl}]});
     }
-
-    // if(cartOfUser) {
-    //     this.sessions.push({cartId: cartId, cart: [{itemId: itemId, quantity: quantity, imageUrl: imageUrl}]});
-    // } else {
-    //     if (this.hasAlready(itemId, cartOfUser)) {
-    //         this.addQuantity(itemId, cartOfUser, quantity);
-    //     } else {
-    //         cartOfUser.push({itemId: itemId, quantity: quantity, imageUrl: imageUrl});
-    //     }
-    // }
 };
 
 CartModel.prototype.get = function(cartId) {
@@ -69,12 +53,6 @@ CartModel.prototype.get = function(cartId) {
     });
 
     return sessionToReturn ? sessionToReturn.cart : null;
-
-    // if(sessionToReturn === undefined)
-    //     return undefined;
-    // else
-    //     return sessionToReturn.cart;
-
 };
 
 CartModel.prototype.put = function(cartId, itemId, quantity) {
