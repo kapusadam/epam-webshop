@@ -190,12 +190,12 @@ app.post('/cart', function (req, res) {
     var imageUrl = req.body.imageUrl;
 
 
-    if(cartId === 'undefined') {
+    if(cartId === undefined) {
         var uniqueId = _.uniqueId('cartId-');
         cartModel.sessions.push({cartId : uniqueId, cart : [], imageUrl: imageUrl});
         res.send({cart: []});
     } else {
-        cartModel.add(cartId, itemId, quantity, imageUrl, _);
+        cartModel.add(cartId, itemId, quantity, imageUrl);
         res.send({cart: cartModel.get(cartId)});
     }
 });

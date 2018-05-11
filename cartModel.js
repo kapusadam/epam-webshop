@@ -9,10 +9,12 @@ CartModel.prototype.cartById = function(cartId) {
         return session.cartId === cartId;
     });
 
-    if(sessionToReturn === undefined)
-        return undefined;
-    else
-        return sessionToReturn.cart;
+    return sessionToReturn ? sessionToReturn.cart : null;
+
+    // if(sessionToReturn === undefined)
+    //     return undefined;
+    // else
+    //     return sessionToReturn.cart;
 
 };
 
@@ -21,10 +23,7 @@ CartModel.prototype.hasAlready = function(itemId, cartOfUser) {
         return item.itemId === itemId;
     });
 
-    if(hasAlready === undefined)
-        return false;
-    else
-        return true;
+    return !!hasAlready;
 };
 
 CartModel.prototype.addQuantity = function(itemId, cartOfUser, quantity) {
@@ -33,7 +32,7 @@ CartModel.prototype.addQuantity = function(itemId, cartOfUser, quantity) {
         return item.itemId === itemId;
     });
 
-    if(foundItem !== undefined)
+    if(foundItem)
         foundItem.quantity += quantity;
 
 };
@@ -41,15 +40,26 @@ CartModel.prototype.addQuantity = function(itemId, cartOfUser, quantity) {
 CartModel.prototype.add = function(cartId, itemId, quantity, imageUrl) {
     var cartOfUser = this.cartById(cartId);
 
-    if(cartOfUser === undefined) {
-        this.sessions.push({cartId: cartId, cart: [{itemId: itemId, quantity: quantity, imageUrl: imageUrl}]});
-    } else {
+
+    if(cartOfUser) {
         if (this.hasAlready(itemId, cartOfUser)) {
             this.addQuantity(itemId, cartOfUser, quantity);
         } else {
             cartOfUser.push({itemId: itemId, quantity: quantity, imageUrl: imageUrl});
         }
+    } else {
+        this.sessions.push({cartId: cartId, cart: [{itemId: itemId, quantity: quantity, imageUrl: imageUrl}]});
     }
+
+    // if(cartOfUser) {
+    //     this.sessions.push({cartId: cartId, cart: [{itemId: itemId, quantity: quantity, imageUrl: imageUrl}]});
+    // } else {
+    //     if (this.hasAlready(itemId, cartOfUser)) {
+    //         this.addQuantity(itemId, cartOfUser, quantity);
+    //     } else {
+    //         cartOfUser.push({itemId: itemId, quantity: quantity, imageUrl: imageUrl});
+    //     }
+    // }
 };
 
 CartModel.prototype.get = function(cartId) {
@@ -58,10 +68,12 @@ CartModel.prototype.get = function(cartId) {
         return session.cartId === cartId;
     });
 
-    if(sessionToReturn === undefined)
-        return undefined;
-    else
-        return sessionToReturn.cart;
+    return sessionToReturn ? sessionToReturn.cart : null;
+
+    // if(sessionToReturn === undefined)
+    //     return undefined;
+    // else
+    //     return sessionToReturn.cart;
 
 };
 
@@ -71,14 +83,14 @@ CartModel.prototype.put = function(cartId, itemId, quantity) {
         return item.itemId === itemId;
     });
 
-    if(itemFound !== undefined)
+    if(itemFound)
         itemFound.quantity = quantity;
 };
 
 CartModel.prototype.delete = function(cartId, itemId) {
     var cartToDeleteFrom = this.cartById(cartId);
 
-    if(cartToDeleteFrom !== undefined) {
+    if(cartToDeleteFrom) {
         var itemToDelete = cartToDeleteFrom.find(function(item) {
             return item.itemId === itemId;
         });
