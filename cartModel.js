@@ -4,75 +4,88 @@ module.exports = CartModel = function () {
 CartModel.prototype.sessions = [];
 
 CartModel.prototype.cartById = function(cartId) {
-    for(var i = 0; i < this.sessions.length; i++) {
-        if(this.sessions[i].cartId === cartId)
-            return this.sessions[i].cart;
-    }
-    return null;
+
+    var sessionToReturn = this.sessions.find(function(session) {
+        return session.cartId === cartId;
+    });
+
+    if(sessionToReturn === undefined)
+        return undefined;
+    else
+        return sessionToReturn.cart;
+
 };
 
 CartModel.prototype.hasAlready = function(itemId, cartOfUser) {
-    for(var i = 0; i < cartOfUser.length; i++) {
-        if(cartOfUser[i].itemId === itemId) {
-            return true;
-        }
-    }
-    return false;
+    var hasAlready = cartOfUser.find(function(item) {
+        return item.itemId === itemId;
+    });
+
+    if(hasAlready === undefined)
+        return false;
+    else
+        return true;
 };
 
 CartModel.prototype.addQuantity = function(itemId, cartOfUser, quantity) {
-    for(var i = 0; i < cartOfUser.length; i++) {
-        if(cartOfUser[i].itemId === itemId) {
-            cartOfUser[i].quantity += quantity;
-            break;
-        }
-    }
-}
+
+    var foundItem = cartOfUser.find(function(item) {
+        return item.itemId === itemId;
+    });
+
+    if(foundItem !== undefined)
+        foundItem.quantity += quantity;
+
+};
 
 CartModel.prototype.add = function(cartId, itemId, quantity, imageUrl) {
     var cartOfUser = this.cartById(cartId);
 
-    if(cartOfUser !== null) {
+    if(cartOfUser === undefined) {
+        this.sessions.push({cartId: cartId, cart: [{itemId: itemId, quantity: quantity, imageUrl: imageUrl}]});
+    } else {
         if (this.hasAlready(itemId, cartOfUser)) {
             this.addQuantity(itemId, cartOfUser, quantity);
         } else {
             cartOfUser.push({itemId: itemId, quantity: quantity, imageUrl: imageUrl});
         }
-    } else {
-        this.sessions.push({cartId: cartId, cart: [{itemId: itemId, quantity: quantity, imageUrl: imageUrl}]});
     }
 };
 
 CartModel.prototype.get = function(cartId) {
-    for(var i = 0; i < this.sessions.length; i++) {
-        if (this.sessions[i].cartId === cartId) {
-            return this.sessions[i].cart;
-        }
-    }
-    return null;
+
+    var sessionToReturn = this.sessions.find(function(session) {
+        return session.cartId === cartId;
+    });
+
+    if(sessionToReturn === undefined)
+        return undefined;
+    else
+        return sessionToReturn.cart;
+
 };
 
 CartModel.prototype.put = function(cartId, itemId, quantity) {
-    var cartToPutInto = this.cartById(cartId);
+    var cartToPutInto = this.cartById(cartId),
+        itemFound = cartToPutInto.find(function(item) {
+        return item.itemId === itemId;
+    });
 
-    for(var i = 0; i < cartToPutInto.length; i++) {
-        if(cartToPutInto[i].itemId === itemId) {
-            cartToPutInto[i].quantity = quantity;
-            break;
-        }
-    }
+    if(itemFound !== undefined)
+        itemFound.quantity = quantity;
 };
 
 CartModel.prototype.delete = function(cartId, itemId) {
     var cartToDeleteFrom = this.cartById(cartId);
 
-    if(cartToDeleteFrom !== null) {
-        for (var i = 0; i < cartToDeleteFrom.length; i++) {
-            if (cartToDeleteFrom[i].itemId === itemId) {
-                cartToDeleteFrom.splice(i, 1);
-                return true;
-            }
-        }
+    if(cartToDeleteFrom !== undefined) {
+        var itemToDelete = cartToDeleteFrom.find(function(item) {
+            return item.itemId === itemId;
+        });
+
+        cartToDeleteFrom.splice(cartToDeleteFrom.indexOf(itemToDelete), 1);
+
+        return true;
     }
 
     return false;

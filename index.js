@@ -219,13 +219,21 @@ app.delete('/cart', function(req, res) {
     var itemId = req.query.itemId;
 
     if(cartModel.delete(cartId, itemId)) {
-
-    sendCartWithSubTotal(cartId, res);
-
+        sendCartWithSubTotal(cartId, res);
     } else {
         res.status(404).send({error: 'Item not found'});
     };
 });
+
+function makeUrlFromUserCart(userCart) {
+    var url = "http://localhost:" + PORT + "/items?$filter=_id eq '" + userCart[0].itemId + "'";
+
+    for (var i = 1; i < userCart.length; i++) {
+        url += " or _id eq '" + userCart[i].itemId + "'";
+    }
+
+    return url;
+}
 
 function sendCartWithSubTotal(cartId, res) {
 
@@ -234,12 +242,7 @@ function sendCartWithSubTotal(cartId, res) {
     var subTotal = 0;
 
     if(userCart.length !== 0) {
-
-        var url = "http://localhost:5000/items?$filter=_id eq '" + userCart[0].itemId + "'";
-
-        for (var i = 1; i < userCart.length; i++) {
-            url += " or _id eq '" + userCart[i].itemId + "'";
-        }
+        var url = makeUrlFromUserCart(userCart);
 
         var requests = [function (callback) {
             request(url, function (err, response, body) {
@@ -266,19 +269,17 @@ function sendCartWithSubTotal(cartId, res) {
 
             var query = results[0].value;
 
-
             for (var i = 0; i < userCart.length; i++) {
-                for (var j = 0; j < query.length; j++) {
-                    if (userCart[i].itemId === query[j]._id) {
-                        resultArray.push({
-                            item: query[i],
-                            quantity: userCart[i].quantity,
-                            imageUrl: userCart[i].imageUrl
-                        });
-                        subTotal += userCart[i].quantity * query[j].price;
-                        break;
-                    }
-                }
+                var queriedItem = query.find(function(item) {
+                    return item._id === userCart[i].itemId;
+                });
+
+                resultArray.push({
+                    item: queriedItem,
+                    quantity: userCart[i].quantity,
+                    imageUrl: userCart[i].imageUrl
+                });
+                subTotal += userCart[i].quantity * queriedItem.price;
             }
 
             res.send({cart: resultArray, subTotal: subTotal});
@@ -291,19 +292,18 @@ function sendCartWithSubTotal(cartId, res) {
 app.get('/cart', function(req, res) {
     var cartId = req.query.cartId;
 
-    if(cartId === 'undefined'){
+    if(cartId === undefined){
         var uniqueId = _.uniqueId('cartId-');
         cartModel.sessions.push({cart: [], cartId: uniqueId });
         res.send({cart: [], cartId: uniqueId, subTotal: 0});
     } else {
-
         var userCart = cartModel.cartById(cartId);
 
-        if(userCart !== null){
-            sendCartWithSubTotal(cartId, res);
-        } else {
+        if(userCart === undefined){
             cartModel.sessions.push({cartId: cartId, cart: []});
             res.send({cart: [], subTotal: 0});
+        } else {
+            sendCartWithSubTotal(cartId, res);
         }
     }
 });
