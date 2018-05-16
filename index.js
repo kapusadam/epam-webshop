@@ -15,7 +15,6 @@ var bodyParser = require("body-parser");
 const PORT = process.env.PORT || 5000;
 const BASEAPIURL = 'http://localhost:' + PORT;
 
-console.log(BASEAPIURL);
 app.use(cors());
 
 var _ = require('lodash');
@@ -296,19 +295,16 @@ app.get('/cart', function(req, res) {
     var cartId = req.query.cartId;
 
     if(cartId === undefined){
-        var uniqueId = _.uniqueId('cartId-');
-        cartModel.sessions.push({cart: [], cartId: uniqueId });
-        res.send({cart: [], cartId: uniqueId, subTotal: 0});
+        var cartId = _.uniqueId('cartId-');
+        cartModel.sessions.push({cart: [], cartId: cartId });
     } else {
         var userCart = cartModel.cartById(cartId);
 
         if(userCart === undefined){
             cartModel.sessions.push({cartId: cartId, cart: []});
-            res.send({cart: [], subTotal: 0});
-        } else {
-            sendCartWithSubTotal(cartId, res);
         }
     }
+    sendCartWithSubTotal(cartId, res);
 });
 
 app.use("/", function (req, res) {
