@@ -9,14 +9,15 @@
   "author": "Adam Kruppa, Laszlo Szegedi, Zoltan Bekesi",
   "license": "ISC",
   "dependencies": {
-    "async": "^2.6.0",
-    "body-parser": "^1.18.2",
-    "cors": "^2.7.1",
-    "express": "^4.14.0",
-    "mongodb": "^3.0.1",
-    "nodemailer": "^4.6.4",
-    "request": "^2.85.0",
+    "async": "2.6.0",
+    "body-parser": "1.18.2",
+    "cors": "2.7.1",
+    "express": "4.14.0",
+    "mongodb": "3.0.1",
+    "nodemailer": "4.6.4",
+    "request": "2.85.0",
     "simple-odata-server": "1.0.0",
-    "simple-odata-server-mongodb": "^1.0.0"
+    "simple-odata-server-mongodb": "1.0.0",
+    "lodash": "4.17.10"
   }
 }
