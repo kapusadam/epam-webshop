@@ -276,12 +276,14 @@ function sendCartWithSubTotal(cartId, res) {
                     return item._id === userCart[i].itemId;
                 });
 
-                resultArray.push({
-                    item: queriedItem,
-                    quantity: userCart[i].quantity,
-                    imageUrl: userCart[i].imageUrl
-                });
-                subTotal += userCart[i].quantity * queriedItem.price;
+                if(queriedItem) {
+                    resultArray.push({
+                        item: queriedItem,
+                        quantity: userCart[i].quantity,
+                        imageUrl: userCart[i].imageUrl
+                    });
+                    subTotal += userCart[i].quantity * queriedItem.price;
+                }
             }
 
             res.send({cart: resultArray, subTotal: subTotal});
