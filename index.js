@@ -209,10 +209,10 @@ app.put('/cart', function(req, res) {
     var quantity = req.body.quantity;
 
     if(quantity >= 0) {
-       cartModel.put(cartId, itemId, quantity);
-       sendCartWithSubTotal(cartId, res);
+        cartModel.put(cartId, itemId, quantity);
+        sendCartWithSubTotal(cartId, res);
     } else {
-       res.send('Quantity is a negative.');
+        res.send('Quantity is a negative.');
     }
 });
 
