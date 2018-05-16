@@ -9,7 +9,7 @@ var country = require('./models/country');
 var countryContinent = require('./models/countryContinent');
 var request = require('request');
 var async = require('async');
-
+var nodemailer = require('./models/email.sender');
 var app = express();
 var bodyParser = require("body-parser");
 const PORT = process.env.PORT || 5000;
@@ -307,6 +307,20 @@ app.get('/cart', function(req, res) {
         }
     }
     sendCartWithSubTotal(cartId, res);
+});
+
+var nodeMailer = new nodemailer();
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: false}));
+app.post("/sendMail", function(req,res) {
+   var email = req.body.userInfo.email;
+   var products = req.body.products;
+   var sendable = "";
+
+   for (var i=0;i<products.length;i++) {
+       sendable += products[i].item.title + "\t" + products[i].quantity + "\t" + products[i].item.price * products[i].quantity + "\n";
+   }
+   res.send(nodeMailer.sendMail(email, 'Epam-grocery-webshop order', sendable));
 });
 
 app.use("/", function (req, res) {
