@@ -11,11 +11,18 @@ var request = require('request');
 var async = require('async');
 var nodemailer = require('./models/email.sender');
 var app = express();
-var bodyParser = require('body-parser');
-
-
+var bodyParser = require("body-parser");
 const PORT = process.env.PORT || 5000;
+const BASEAPIURL = 'http://localhost:' + PORT;
+
 app.use(cors());
+
+var _ = require('lodash');
+
+
+var CartModel = require('./cartModel');
+
+var cartModel = new CartModel();
 
 console.log('fut a server');
 
@@ -45,10 +52,10 @@ MongoClient.connect("mongodb://admin:admin@ds115198.mlab.com:15198/webshop", fun
     }));
 });
 
-app.get("/helper", function(req, res, next) {
+app.get("/helper", function(req, res) {
 
     var requests = [function (callback) {
-        var url = 'http://localhost:' + PORT + '/countryContinents';
+        var url = BASEAPIURL + '/countryContinents';
         request(url, function (err, response, body) {
             // JSON body
             if (err) {
@@ -64,7 +71,7 @@ app.get("/helper", function(req, res, next) {
          * Second external endpoint
          */
         function (callback) {
-            var url = 'http://localhost:' + PORT + '/countries';
+            var url = BASEAPIURL + '/countries';
             request(url, function (err, response, body) {
                 // JSON body
                 if (err) {
@@ -100,11 +107,10 @@ app.get("/helper", function(req, res, next) {
 
 });
 
-// /continetFilter/items?$filter=countryCode eq 'AF'&continents=['AF','EU']
-app.get("/continentFilter", function (req, res, next) {
+app.get("/continentFilter", function (req, res) {
 
     var requests = [function (callback) {
-        var url = 'http://localhost:' + PORT + '/helper';
+        var url = BASEAPIURL + '/helper';
         request(url, function (err, response, body) {
             // JSON body
             if (err) {
@@ -120,7 +126,7 @@ app.get("/continentFilter", function (req, res, next) {
          * Second external endpoint
          */
         function (callback) {
-            var url = 'http://localhost:' + PORT + '/items?$filter=' + req.query.$filter;
+            var url = BASEAPIURL + '/items?$filter=' + req.query.$filter;
 
             request(url, function (err, response, body) {
                 // JSON body
@@ -158,7 +164,6 @@ app.get("/continentFilter", function (req, res, next) {
             }
         }
 
-
         if(continentCodeArray.length) {
             for (var i = 0; i < continentCodeArray.length; i++) {
                 for (var j = 0; j < results[1].value.length; j++) {
@@ -176,19 +181,159 @@ app.get("/continentFilter", function (req, res, next) {
 
 });
 
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+app.post('/cart', function (req, res) {
+    var cartId = req.body.cartId;
+    var itemId = req.body.item._id;
+    var quantity = req.body.quantity;
+    var imageUrl = req.body.imageUrl;
+
+
+    if(cartId === undefined) {
+        var uniqueId = _.uniqueId('cartId-');
+        cartModel.sessions.push({cartId : uniqueId, cart : [], imageUrl: imageUrl});
+        res.send({cart: []});
+    } else {
+        cartModel.add(cartId, itemId, quantity, imageUrl);
+        res.send({cart: cartModel.cartById(cartId)});
+    }
+});
+
+
+app.put('/cart', function(req, res) {
+    var cartId = req.body.cartId;
+    var itemId = req.body.itemId;
+    var quantity = req.body.quantity;
+
+    if(quantity >= 0) {
+        cartModel.put(cartId, itemId, quantity);
+        sendCartWithSubTotal(cartId, res, false);
+    } else {
+        res.send('Quantity is a negative.');
+    }
+});
+
+app.delete('/cart', function(req, res) {
+    var cartId = req.query.cartId;
+    var itemId = req.query.itemId;
+
+    if(cartModel.delete(cartId, itemId)) {
+        sendCartWithSubTotal(cartId, res, false);
+    } else {
+        res.status(404).send({error: 'Item not found'});
+    }
+});
+
+app.delete('/deleteCart', function (req, res) {
+    var cartId = req.query.cartId;
+    cartModel.deleteContents(cartId);
+    res.send({cart: cartModel.cartById(cartId)});
+});
+
+function makeUrlFromUserCart(userCart) {
+    var url = BASEAPIURL + "/items?$filter=_id eq '" + userCart[0].itemId + "'";
+
+    for (var i = 1; i < userCart.length; i++) {
+        url += " or _id eq '" + userCart[i].itemId + "'";
+    }
+
+    return url;
+}
+
+function sendCartWithSubTotal(cartId, res, email) {
+
+    var userCart = cartModel.cartById(cartId);
+
+    var subTotal = 0;
+
+    if(userCart.length !== 0) {
+        var url = makeUrlFromUserCart(userCart);
+
+        var requests = [function (callback) {
+            request(url, function (err, response, body) {
+                // JSON body
+                if (err) {
+                    console.log(err);
+                    callback(true);
+                    return;
+                }
+
+                obj = JSON.parse(body);
+                callback(false, obj);
+            });
+        }];
+
+        var resultArray = [];
+
+        async.parallel(requests, function (err, results) {
+            if (err) {
+                console.log(err);
+                res.send(500, "Server Error");
+                return;
+            }
+
+            var query = results[0].value;
+
+            for (var i = 0; i < userCart.length; i++) {
+                var queriedItem = query.find(function(item) {
+                    return item._id === userCart[i].itemId;
+                });
+
+                if(queriedItem) {
+                    resultArray.push({
+                        item: queriedItem,
+                        quantity: userCart[i].quantity,
+                        imageUrl: userCart[i].imageUrl
+                    });
+                    subTotal += userCart[i].quantity * queriedItem.price;
+                }
+            }
+            if (!email) {
+                res.send({cart: resultArray, subTotal: subTotal});
+            }
+            else {
+                var body = "";
+                for (var i = 0; i < resultArray.length; i++) {
+                    body += resultArray[i].item.title + "\t" + resultArray[i].quantity + "\t" + resultArray[i].quantity*resultArray[i].item.price + "$\n";
+                }
+                body += "Total: $" + subTotal;
+                res.send(nodeMailer.sendMail(email, 'Epam-grocery-webshop order', body));
+            }
+        });
+    } else {
+        if (!email) {
+            res.send({cart: [], subTotal: 0});
+        }
+    }
+}
+
+app.get('/cart', function(req, res) {
+    var cartId = req.query.cartId;
+
+    if(cartId === undefined){
+        var cartId = _.uniqueId('cartId-');
+        cartModel.sessions.push({cart: [], cartId: cartId });
+        res.send({cartId: cartId});
+    } else {
+        var userCart = cartModel.cartById(cartId);
+
+        if(userCart === undefined){
+            cartModel.sessions.push({cartId: cartId, cart: []});
+        }
+    }
+    sendCartWithSubTotal(cartId, res, false);
+});
+
 var nodeMailer = new nodemailer();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
-app.post("/sendMail", function(req,res) {
+app.post("/sendMail", function(req, res) {
    var email = req.body.userInfo.email;
-   var products = req.body.products;
-
-    console.log(products);
-   var sendable = "";
-   for (var i=0;i<products.length;i++) {
-       sendable+= products[i].item.title + "\t" + products[i].quantity + "\t" + products[i].item.price * products[i].quantity + "\n";
-   }
-   res.send(nodeMailer.sendMail(email, 'Epam-grocery-webshop order', sendable));
+   var cartId = req.body.cartId;
+   sendCartWithSubTotal(cartId, res, email)
 });
 
 app.use("/", function (req, res) {
@@ -196,6 +341,5 @@ app.use("/", function (req, res) {
 });
 
 var server = app.listen(PORT, function () {
-    console.log('Server running at http://localhost:' + PORT + '');
+    console.log('Server running at ' + BASEAPIURL + '');
 });
-
