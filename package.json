@@ -11,8 +11,10 @@
   "dependencies": {
     "cors": "^2.7.1",
     "express": "^4.14.0",
+    "md5": "^2.2.1",
     "mongodb": "^3.0.1",
     "simple-odata-server": "1.0.0",
-    "simple-odata-server-mongodb": "^1.0.0"
+    "simple-odata-server-mongodb": "^1.0.0",
+    "uuid-token-generator": "^1.0.0"
   }
 }
