@@ -15,6 +15,6 @@
     "mongodb": "3.0.1",
     "simple-odata-server": "1.0.0",
     "simple-odata-server-mongodb": "1.0.0",
-    "uuid-token-generator": "1.0.0"
+    "uuid-token-generator": "1.0.0",
   }
 }

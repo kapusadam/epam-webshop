@@ -349,7 +349,7 @@ app.post("/login", function(req, res) {
             var tokenArrayElement = tokenArray.find(function(element) {
                 return element.name === name;
             });
-            
+
             if(!!tokenArrayElement){
                 res.send({token: tokenArrayElement.token});
             } else {
