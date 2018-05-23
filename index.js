@@ -318,8 +318,7 @@ app.get('/cart', function(req, res) {
 });
 
 var nodeMailer = new nodemailer();
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: false}));
+
 app.post("/sendMail", function(req,res) {
    var email = req.body.userInfo.email;
    var products = req.body.products;
@@ -369,5 +368,5 @@ app.use("/", function (req, res) {
 });
 
 var server = app.listen(PORT, function () {
-    console.log('Server running at ' + BASEAPIURL + '');
+    console.log('Server running at ' + BASEAPIURL);
 });
