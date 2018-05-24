@@ -4,6 +4,7 @@ var MongoClient = require('mongodb').MongoClient;
 var mongoAdapter = require('simple-odata-server-mongodb');
 var cors = require("cors");
 var item = require('./models/item');
+var user = require('./models/user');
 var continent = require('./models/continent');
 var country = require('./models/country');
 var countryContinent = require('./models/countryContinent');
@@ -18,11 +19,15 @@ const BASEAPIURL = 'http://localhost:' + PORT;
 app.use(cors());
 
 var _ = require('lodash');
+var md5 = require('md5');
+const TokenGenerator = require('uuid-token-generator');
+const tokenGenerator = new TokenGenerator();
 
-
-var CartModel = require('./cartModel');
+var CartModel = require('./models/cartModel');
 
 var cartModel = new CartModel();
+
+var tokenArray = [];
 
 console.log('fut a server');
 
@@ -32,13 +37,15 @@ var model = {
         "ItemType": item,
         "ContinentType": continent,
         "CountryType": country,
-        "CountryContinentType": countryContinent
+        "CountryContinentType": countryContinent,
+        "UserType": user
     },
     entitySets: {
-        "items": {entityType: "jsreport.ItemType"},
-        "continents": {entityType: "jsreport.ContinentType"},
-        "countries": {entityType: "jsreport.CountryType"},
-        "countryContinents": {entityType: "jsreport.CountryContinentType"}
+        "items": { entityType: "jsreport.ItemType" },
+        "continents": { entityType: "jsreport.ContinentType" },
+        "countries": { entityType: "jsreport.CountryType" },
+        "countryContinents": { entityType: "jsreport.CountryContinentType" },
+        "users": { entityType: "jsreport.UserType"}
     }
 };
 
@@ -299,6 +306,7 @@ app.get('/cart', function(req, res) {
     if(cartId === undefined){
         var cartId = _.uniqueId('cartId-');
         cartModel.sessions.push({cart: [], cartId: cartId });
+        res.send({cartId: cartId});
     } else {
         var userCart = cartModel.cartById(cartId);
 
@@ -310,8 +318,7 @@ app.get('/cart', function(req, res) {
 });
 
 var nodeMailer = new nodemailer();
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: false}));
+
 app.post("/sendMail", function(req,res) {
    var email = req.body.userInfo.email;
    var products = req.body.products;
@@ -323,10 +330,43 @@ app.post("/sendMail", function(req,res) {
    res.send(nodeMailer.sendMail(email, 'Epam-grocery-webshop order', sendable));
 });
 
+app.post("/login", function(req, res) {
+    var name = req.body.name;
+    var password = req.body.password;
+    var url = BASEAPIURL + "/users?$filter=name eq '" + name + "' and password eq '" + md5(password) + "'";
+
+    request(url, function (err, response, body) {
+        // JSON body
+        if (err) {
+            console.log(err);
+            callback(true);
+            return;
+        }
+        obj = JSON.parse(body);
+
+        if(!!obj.value[0]){
+            var tokenArrayElement = tokenArray.find(function(element) {
+                return element.name === name;
+            });
+
+            if(!!tokenArrayElement){
+                res.send({token: tokenArrayElement.token});
+            } else {
+                var token = tokenGenerator.generate();
+                tokenArray.push({name: name, token: token, id: obj.value[0]._id});
+                res.send({token: token});
+            }
+        } else {
+            res.status(401).send({error: 'Unauthorized'});
+        }
+    });
+
+});
+
 app.use("/", function (req, res) {
     odataServer.handle(req, res);
 });
 
 var server = app.listen(PORT, function () {
-    console.log('Server running at ' + BASEAPIURL + '');
+    console.log('Server running at ' + BASEAPIURL);
 });
